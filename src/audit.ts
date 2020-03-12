@@ -12,7 +12,6 @@ export class Audit {
       {
         encoding: 'utf-8',
         maxBuffer: 10 * 1024 * 1024 * 1024,
-        stdio: 'pipe'
       }
     )
 
@@ -27,7 +26,7 @@ export class Audit {
     }
 
     this.status = result.status
-    this.stdout = result.stdout
+    this.stdout = result.stdout.toString()
   }
 
   public foundVulnerability(): boolean {

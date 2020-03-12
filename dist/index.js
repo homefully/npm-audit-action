@@ -2031,7 +2031,6 @@ class Audit {
             const result = child_process_1.spawnSync('npm', ['audit', '--json'], {
                 encoding: 'utf-8',
                 maxBuffer: 10 * 1024 * 1024 * 1024,
-                stdio: 'pipe'
             });
             if (result.error) {
                 throw result.error;
@@ -2043,7 +2042,7 @@ class Audit {
                 throw new Error(result.stderr);
             }
             this.status = result.status;
-            this.stdout = result.stdout;
+            this.stdout = result.stdout.toString();
         });
     }
     foundVulnerability() {
