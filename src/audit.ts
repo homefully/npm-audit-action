@@ -1,4 +1,5 @@
-import {spawnSync, SpawnSyncReturns} from 'child_process'
+import * as core from '@actions/core'
+import {spawn} from 'child_process'
 import stripAnsi from 'strip-ansi'
 
 export class Audit {
@@ -6,27 +7,30 @@ export class Audit {
   private status: number | null = null
 
   public async run(): Promise<void> {
-    const result: SpawnSyncReturns<string> = spawnSync(
-      'npm',
-      ['audit', '--json'],
-      {
-        encoding: 'utf-8',
-        maxBuffer: 10 * 1024 * 1024 * 1024,
-      }
-    )
+    const result = spawn('npm', ['audit', '--json'], {
+      stdio: 'pipe'
+    })
 
-    if (result.error) {
-      throw result.error
-    }
-    if (result.status === null) {
-      throw new Error('the subprocess terminated due to a signal.')
-    }
-    if (result.stderr && result.stderr.length > 0) {
-      throw new Error(result.stderr)
-    }
+    let stdout = ''
 
-    this.status = result.status
-    this.stdout = result.stdout.toString()
+    result.stdout.on('data', data => {
+      stdout += data.toString()
+    })
+
+    result.stderr.on('data', data => {
+      core.error(data.toString())
+    })
+
+    this.status = await new Promise((resolve, reject) => {
+      result.on('close', status => {
+        resolve(status)
+      })
+      result.on('error', status => {
+        reject(status)
+      })
+    })
+
+    this.stdout = stdout.toString()
   }
 
   public foundVulnerability(): boolean {
