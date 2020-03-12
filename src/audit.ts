@@ -10,7 +10,8 @@ export class Audit {
       'npm',
       ['audit', '--json'],
       {
-        encoding: 'utf-8'
+        encoding: 'utf-8',
+        maxBuffer: 100 * 1024 * 1024,
       }
     )
 
