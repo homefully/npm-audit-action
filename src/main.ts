@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/camelcase */
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import Octokit from '@octokit/rest'
@@ -27,8 +28,8 @@ export async function run(): Promise<void> {
       })
 
       const promises = Object.values(advisories).map(async advisory => {
-        core.debug(`Found advisory: ${ advisory.id }`)
-        const issueName = `${ advisory.severity }: ${ advisory.title } in ${ advisory.module_name } - advisory ${ advisory.id }`
+        core.debug(`Found advisory: ${advisory.id}`)
+        const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - advisory ${advisory.id}`
         const existingIssue = issues.find(it => it.title === issueName)
         if (existingIssue) {
           core.debug('Found issue for advisory')
@@ -39,15 +40,15 @@ export async function run(): Promise<void> {
           title: issueName,
           body: `
 # npm audit found
-${ advisory.overview },
+${advisory.overview},
 
-*vulnerable versions*: ${ advisory.vulnerable_versions },
+*vulnerable versions*: ${advisory.vulnerable_versions},
 
-*fixed in*: ${ advisory.patched_versions },
+*fixed in*: ${advisory.patched_versions},
 
-*reference*: ${ advisory.references }
+*reference*: ${advisory.references}
 
-*url*: ${ advisory.url }
+*url*: ${advisory.url}
             `
         }
 
@@ -71,7 +72,7 @@ ${ advisory.overview },
           })
 
           const commentText = `# Found npm audit issues
-${ issuesCreated.map(it => `[${ it.title }](${ it.url })`).join('\n') }
+${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
           `
           const foundComment = comments.find(it =>
             it.body.includes('# Found npm audit issues')

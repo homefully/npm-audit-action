@@ -12,7 +12,7 @@ export class Audit {
       {
         encoding: 'utf-8',
         maxBuffer: 10 * 1024 * 1024 * 1024,
-        stdio: 'ignore'
+        stdio: 'pipe'
       }
     )
 

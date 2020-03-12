@@ -2031,7 +2031,7 @@ class Audit {
             const result = child_process_1.spawnSync('npm', ['audit', '--json'], {
                 encoding: 'utf-8',
                 maxBuffer: 10 * 1024 * 1024 * 1024,
-                stdio: 'ignore'
+                stdio: 'pipe'
             });
             if (result.error) {
                 throw result.error;
@@ -3279,6 +3279,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* eslint-disable @typescript-eslint/camelcase */
 const core = __importStar(__webpack_require__(470));
 const github = __importStar(__webpack_require__(469));
 const audit_1 = __webpack_require__(50);
