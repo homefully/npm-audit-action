@@ -11,7 +11,8 @@ export class Audit {
       ['audit', '--json'],
       {
         encoding: 'utf-8',
-        maxBuffer: 10 * 1024 * 1024 * 1024
+        maxBuffer: 10 * 1024 * 1024 * 1024,
+        stdio: 'pipe'
       }
     )
 

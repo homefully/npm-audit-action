@@ -2030,7 +2030,8 @@ class Audit {
         return __awaiter(this, void 0, void 0, function* () {
             const result = child_process_1.spawnSync('npm', ['audit', '--json'], {
                 encoding: 'utf-8',
-                maxBuffer: 10 * 1024 * 1024 * 1024
+                maxBuffer: 10 * 1024 * 1024 * 1024,
+                stdio: 'pipe'
             });
             if (result.error) {
                 throw result.error;
@@ -3302,18 +3303,22 @@ function run() {
                     const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - advisory ${advisory.id}`;
                     const existingIssue = issues.find(it => it.title === issueName);
                     if (existingIssue) {
-                        core.debug('Foound issue for advisory');
+                        core.debug('Found issue for advisory');
                         return existingIssue;
                     }
                     const createIssue = {
                         title: issueName,
                         body: `
-npm audit found:
+# npm audit found
 ${advisory.overview},
-vulnerable versions: ${advisory.vulnerable_versions},
-fixed in: ${advisory.patched_versions},
-reference: ${advisory.references}
-url: ${advisory.url}
+
+*vulnerable versions*: ${advisory.vulnerable_versions},
+
+*fixed in*: ${advisory.patched_versions},
+
+*reference*: ${advisory.references}
+
+*url*: ${advisory.url}
             `
                     };
                     core.debug(`Creating issue for advisory`);
@@ -3328,10 +3333,10 @@ url: ${advisory.url}
                             repo: github.context.repo.repo,
                             issue_number: ctx.event.id
                         });
-                        const commentText = `Found npm audit issues
+                        const commentText = `# Found npm audit issues
 ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
           `;
-                        const foundComment = comments.find(it => it.body.includes('Found npm audit issues'));
+                        const foundComment = comments.find(it => it.body.includes('# Found npm audit issues'));
                         if (foundComment) {
                             core.debug(`Updating PR comment`);
                             yield client.issues.updateComment(Object.assign(Object.assign({}, github.context.repo), { comment_id: foundComment.id, body: commentText }));

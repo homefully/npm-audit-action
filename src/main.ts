@@ -1,10 +1,8 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import Octokit, {IssuesCreateResponse} from '@octokit/rest'
+import Octokit from '@octokit/rest'
 import {Audit} from './audit'
-import {AuditOutput, IssueOption} from './interface'
-import * as issue from './issue'
-import * as pr from './pr'
+import {AuditOutput} from './interface'
 
 export async function run(): Promise<void> {
   try {
@@ -29,23 +27,27 @@ export async function run(): Promise<void> {
       })
 
       const promises = Object.values(advisories).map(async advisory => {
-        core.debug(`Found advisory: ${advisory.id}`)
-        const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - advisory ${advisory.id}`
+        core.debug(`Found advisory: ${ advisory.id }`)
+        const issueName = `${ advisory.severity }: ${ advisory.title } in ${ advisory.module_name } - advisory ${ advisory.id }`
         const existingIssue = issues.find(it => it.title === issueName)
         if (existingIssue) {
-          core.debug('Foound issue for advisory')
+          core.debug('Found issue for advisory')
           return existingIssue
         }
 
         const createIssue = {
           title: issueName,
           body: `
-npm audit found:
-${advisory.overview},
-vulnerable versions: ${advisory.vulnerable_versions},
-fixed in: ${advisory.patched_versions},
-reference: ${advisory.references}
-url: ${advisory.url}
+# npm audit found
+${ advisory.overview },
+
+*vulnerable versions*: ${ advisory.vulnerable_versions },
+
+*fixed in*: ${ advisory.patched_versions },
+
+*reference*: ${ advisory.references }
+
+*url*: ${ advisory.url }
             `
         }
 
@@ -68,11 +70,11 @@ url: ${advisory.url}
             issue_number: ctx.event.id
           })
 
-          const commentText = `Found npm audit issues
-${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
+          const commentText = `# Found npm audit issues
+${ issuesCreated.map(it => `[${ it.title }](${ it.url })`).join('\n') }
           `
           const foundComment = comments.find(it =>
-            it.body.includes('Found npm audit issues')
+            it.body.includes('# Found npm audit issues')
           )
 
           if (foundComment) {
