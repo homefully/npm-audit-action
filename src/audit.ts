@@ -6,9 +6,13 @@ export class Audit {
   private status: number | null = null
 
   public async run(): Promise<void> {
-    const result: SpawnSyncReturns<string> = spawnSync('npm', ['audit'], {
-      encoding: 'utf-8'
-    })
+    const result: SpawnSyncReturns<string> = spawnSync(
+      'npm',
+      ['audit', '--json'],
+      {
+        encoding: 'utf-8'
+      }
+    )
 
     if (result.error) {
       throw result.error
@@ -30,6 +34,6 @@ export class Audit {
   }
 
   public strippedStdout(): string {
-    return `\`\`\`\n${stripAnsi(this.stdout)}\n\`\`\``
+    return `\`\`\`\n${ stripAnsi(this.stdout) }\n\`\`\``
   }
 }
