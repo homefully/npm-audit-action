@@ -28,11 +28,11 @@ export async function run(): Promise<void> {
       })
 
       const promises = Object.values(advisories).map(async advisory => {
-        core.debug(`Found advisory: ${advisory.id}`)
+        core.info(`Found advisory: ${advisory.id}`)
         const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - advisory ${advisory.id}`
         const existingIssue = issues.find(it => it.title === issueName)
         if (existingIssue) {
-          core.debug('Found issue for advisory')
+          core.info('Found issue for advisory')
           return existingIssue
         }
 
@@ -52,7 +52,7 @@ ${advisory.overview},
             `
         }
 
-        core.debug(`Creating issue for advisory`)
+        core.info(`Creating issue for advisory`)
         return (
           await client.issues.create({
             ...github.context.repo,
@@ -62,8 +62,9 @@ ${advisory.overview},
       })
 
       const issuesCreated = await Promise.all(promises)
+      core.info(JSON.stringify(issuesCreated, null,4))
       if (issuesCreated.length > 0) {
-        core.debug(`Found Issues`)
+        core.info(`Found Issues`)
         if (ctx.event_name === 'pull_request') {
           const {data: comments} = await client.issues.listComments({
             owner: github.context.repo.owner,
@@ -79,7 +80,7 @@ ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
           )
 
           if (foundComment) {
-            core.debug(`Updating PR comment`)
+            core.info(`Updating PR comment`)
             await client.issues.updateComment({
               ...github.context.repo,
               comment_id: foundComment.id,

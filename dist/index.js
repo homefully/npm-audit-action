@@ -3311,11 +3311,11 @@ function run() {
                 const advisories = auditOutput.advisories;
                 const { data: issues } = yield client.issues.listForRepo(Object.assign({}, github.context.repo));
                 const promises = Object.values(advisories).map((advisory) => __awaiter(this, void 0, void 0, function* () {
-                    core.debug(`Found advisory: ${advisory.id}`);
+                    core.info(`Found advisory: ${advisory.id}`);
                     const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - advisory ${advisory.id}`;
                     const existingIssue = issues.find(it => it.title === issueName);
                     if (existingIssue) {
-                        core.debug('Found issue for advisory');
+                        core.info('Found issue for advisory');
                         return existingIssue;
                     }
                     const createIssue = {
@@ -3333,12 +3333,13 @@ ${advisory.overview},
 *url*: ${advisory.url}
             `
                     };
-                    core.debug(`Creating issue for advisory`);
+                    core.info(`Creating issue for advisory`);
                     return (yield client.issues.create(Object.assign(Object.assign({}, github.context.repo), createIssue))).data;
                 }));
                 const issuesCreated = yield Promise.all(promises);
+                core.info(JSON.stringify(issuesCreated, null, 4));
                 if (issuesCreated.length > 0) {
-                    core.debug(`Found Issues`);
+                    core.info(`Found Issues`);
                     if (ctx.event_name === 'pull_request') {
                         const { data: comments } = yield client.issues.listComments({
                             owner: github.context.repo.owner,
@@ -3350,7 +3351,7 @@ ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
           `;
                         const foundComment = comments.find(it => it.body.includes('# Found npm audit issues'));
                         if (foundComment) {
-                            core.debug(`Updating PR comment`);
+                            core.info(`Updating PR comment`);
                             yield client.issues.updateComment(Object.assign(Object.assign({}, github.context.repo), { comment_id: foundComment.id, body: commentText }));
                             return;
                         }
