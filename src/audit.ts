@@ -11,7 +11,7 @@ export class Audit {
       ['audit', '--json'],
       {
         encoding: 'utf-8',
-        maxBuffer: 100 * 1024 * 1024,
+        maxBuffer: 10 * 1024 * 1024 * 1024
       }
     )
 
@@ -35,6 +35,6 @@ export class Audit {
   }
 
   public strippedStdout(): string {
-    return `\`\`\`\n${ stripAnsi(this.stdout) }\n\`\`\``
+    return `\`\`\`\n${stripAnsi(this.stdout)}\n\`\`\``
   }
 }
