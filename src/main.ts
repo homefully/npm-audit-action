@@ -90,7 +90,7 @@ ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
           core.info(`checking pr ${pull.id}`)
           await postStatusToPr(
             client,
-            {...github.context.repo, issue_number: pull.id},
+            {...github.context.repo, issue_number: pull.number},
             prCommentText
           )
         }
