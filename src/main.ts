@@ -33,7 +33,9 @@ export async function run(): Promise<void> {
         core.info(`Found advisory: ${advisory.id}`)
         const issueIdentifier = `advisory ${advisory.id}`
         const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - ${issueIdentifier}`
-        const existingIssue = issues.find(it => it.title.includes(issueIdentifier))
+        const existingIssue = issues.find(it =>
+          it.title.includes(issueIdentifier)
+        )
         const body = `
 ${advisory.overview},
 
@@ -92,43 +94,44 @@ ${advisory.url}
           }
         }
       }
-
-      if (issuesCreated.length > 0) {
-        const prCommentText = `# Found npm audit issues
-${issuesCreated.map(it => `#${it.number}`).join('\n')}
-          `
-
-        if (ctx.event_name === 'pull_request') {
-          await postStatusToPr(
-            client,
-            {
-              ...github.context.repo,
-              ...ctx.event.id
-            },
-            prCommentText
-          )
-        }
-
-        core.info(github.context.ref)
-        const {
-          data: pulls
-        } = await client.repos.listPullRequestsAssociatedWithCommit({
-          ...github.context.repo,
-          commit_sha: github.context.sha
-        })
-
-        for (const pull of pulls) {
-          core.info(`checking pr ${pull.number}`)
-          await postStatusToPr(
-            client,
-            {...github.context.repo, issue_number: pull.number},
-            prCommentText
-          )
-        }
-      }
+      //
+      //       if (issuesCreated.length > 0) {
+      //         const prCommentText = `# Found npm audit issues
+      // ${issuesCreated.map(it => `#${it.number}`).join('\n')}
+      //           `
+      //
+      //         if (ctx.event_name === 'pull_request') {
+      //           await postStatusToPr(
+      //             client,
+      //             {
+      //               ...github.context.repo,
+      //               ...ctx.event.id
+      //             },
+      //             prCommentText
+      //           )
+      //         }
+      //
+      //         core.info(github.context.ref)
+      //         const {
+      //           data: pulls
+      //         } = await client.repos.listPullRequestsAssociatedWithCommit({
+      //           ...github.context.repo,
+      //           commit_sha: github.context.sha
+      //         })
+      //
+      //         for (const pull of pulls) {
+      //           core.info(`checking pr ${pull.number}`)
+      //           await postStatusToPr(
+      //             client,
+      //             {...github.context.repo, issue_number: pull.number},
+      //             prCommentText
+      //           )
+      //         }
+      //       }
     }
   } catch (error) {
     core.setFailed(error.message)
+    core.setFailed(error)
   }
 }
 

@@ -3352,24 +3352,45 @@ ${advisory.url}
                         }
                     }
                 }
-                if (issuesCreated.length > 0) {
-                    const prCommentText = `# Found npm audit issues
-${issuesCreated.map(it => `#${it.number}`).join('\n')}
-          `;
-                    if (ctx.event_name === 'pull_request') {
-                        yield postStatusToPr(client, Object.assign(Object.assign({}, github.context.repo), ctx.event.id), prCommentText);
-                    }
-                    core.info(github.context.ref);
-                    const { data: pulls } = yield client.repos.listPullRequestsAssociatedWithCommit(Object.assign(Object.assign({}, github.context.repo), { commit_sha: github.context.sha }));
-                    for (const pull of pulls) {
-                        core.info(`checking pr ${pull.number}`);
-                        yield postStatusToPr(client, Object.assign(Object.assign({}, github.context.repo), { issue_number: pull.number }), prCommentText);
-                    }
-                }
+                //
+                //       if (issuesCreated.length > 0) {
+                //         const prCommentText = `# Found npm audit issues
+                // ${issuesCreated.map(it => `#${it.number}`).join('\n')}
+                //           `
+                //
+                //         if (ctx.event_name === 'pull_request') {
+                //           await postStatusToPr(
+                //             client,
+                //             {
+                //               ...github.context.repo,
+                //               ...ctx.event.id
+                //             },
+                //             prCommentText
+                //           )
+                //         }
+                //
+                //         core.info(github.context.ref)
+                //         const {
+                //           data: pulls
+                //         } = await client.repos.listPullRequestsAssociatedWithCommit({
+                //           ...github.context.repo,
+                //           commit_sha: github.context.sha
+                //         })
+                //
+                //         for (const pull of pulls) {
+                //           core.info(`checking pr ${pull.number}`)
+                //           await postStatusToPr(
+                //             client,
+                //             {...github.context.repo, issue_number: pull.number},
+                //             prCommentText
+                //           )
+                //         }
+                //       }
             }
         }
         catch (error) {
             core.setFailed(error.message);
+            core.setFailed(error);
         }
     });
 }
