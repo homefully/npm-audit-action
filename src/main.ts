@@ -78,13 +78,19 @@ ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
           )
         }
 
-        const pulls = await client.repos.listPullRequestsAssociatedWithCommit({
+        const {
+          data: pulls
+        } = await client.repos.listPullRequestsAssociatedWithCommit({
           ...github.context.repo,
           commit_sha: github.context.ref
         })
 
         for (const pull of pulls) {
-          await postStatusToPr(client, pull, prCommentText)
+          await postStatusToPr(
+            client,
+            {...github.context.repo, issue_number: pull.id},
+            prCommentText
+          )
         }
       }
     }
