@@ -3355,7 +3355,7 @@ ${advisory.url}
                         }
                     }
                 }
-                const issueLinks = issuesCreated.map(it => `#${it.number}`);
+                const issueLinks = issuesCreated.map(it => `#[${it.title}](${it.html_url})`);
                 if (ctx.event_name === 'pull_request') {
                     yield postStatusToPr(client, Object.assign(Object.assign({}, github.context.repo), ctx.event.id), issueLinks);
                 }
