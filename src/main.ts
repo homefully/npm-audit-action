@@ -77,7 +77,7 @@ ${advisory.url}
 
       for (const issue of issuesCreated) {
         for (const pr of prs) {
-          const text = `affects (${pr.title})[${pr.html_url}]`
+          const text = `affects [${pr.title}](${pr.html_url})`
           const {data: comments} = await client.issues.listComments({
             ...github.context.repo,
             issue_number: issue.number

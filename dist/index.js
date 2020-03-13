@@ -3344,7 +3344,7 @@ ${advisory.url}
                 const issuesCreated = yield Promise.all(promises);
                 for (const issue of issuesCreated) {
                     for (const pr of prs) {
-                        const text = `affects (${pr.title})[${pr.html_url}]`;
+                        const text = `affects [${pr.title}](${pr.html_url})`;
                         const { data: comments } = yield client.issues.listComments(Object.assign(Object.assign({}, github.context.repo), { issue_number: issue.number }));
                         if (comments.find(it => it.body === text) === undefined) {
                             yield client.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: issue.number, body: text }));
