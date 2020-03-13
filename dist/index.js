@@ -3314,13 +3314,7 @@ function run() {
                     core.info(`Found advisory: ${advisory.id}`);
                     const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - advisory ${advisory.id}`;
                     const existingIssue = issues.find(it => it.title === issueName);
-                    if (existingIssue) {
-                        core.info('Found issue for advisory');
-                        return existingIssue;
-                    }
-                    const createIssue = {
-                        title: issueName,
-                        body: `
+                    const body = `
 # npm audit found
 ${advisory.overview},
 
@@ -3331,7 +3325,14 @@ ${advisory.overview},
 *reference*: ${advisory.references}
 
 *url*: ${advisory.url}
-            `
+            `;
+                    if (existingIssue) {
+                        core.info('Found issue for advisory');
+                        return (yield client.issues.update(Object.assign(Object.assign({}, github.context.repo), { issue_number: existingIssue.number, body }))).data;
+                    }
+                    const createIssue = {
+                        title: issueName,
+                        body
                     };
                     core.info(`Creating issue for advisory`);
                     return (yield client.issues.create(Object.assign(Object.assign({}, github.context.repo), createIssue))).data;
@@ -3339,7 +3340,7 @@ ${advisory.overview},
                 const issuesCreated = yield Promise.all(promises);
                 if (issuesCreated.length > 0) {
                     const prCommentText = `# Found npm audit issues
-${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
+${issuesCreated.map(it => `[${it.title}](${it.html_url})`).join('\n')}
           `;
                     if (ctx.event_name === 'pull_request') {
                         yield postStatusToPr(client, Object.assign(Object.assign({}, github.context.repo), ctx.event.id), prCommentText);
