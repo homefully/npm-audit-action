@@ -9,10 +9,10 @@ export async function run(): Promise<void> {
   try {
     // run `npm audit`
     const audit = new Audit()
-    audit.run()
-    core.info(audit.stdout)
+    await audit.run()
 
     if (audit.foundVulnerability()) {
+      core.info("Found vulnarebilities")
       // vulnerabilities are found
 
       // get GitHub information

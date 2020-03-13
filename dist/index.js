@@ -3299,9 +3299,9 @@ function run() {
         try {
             // run `npm audit`
             const audit = new audit_1.Audit();
-            audit.run();
-            core.info(audit.stdout);
+            yield audit.run();
             if (audit.foundVulnerability()) {
+                core.info("Found vulnarebilities");
                 // vulnerabilities are found
                 // get GitHub information
                 const ctx = JSON.parse(core.getInput('github_context'));
