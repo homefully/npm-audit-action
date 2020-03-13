@@ -3301,7 +3301,7 @@ function run() {
             const audit = new audit_1.Audit();
             yield audit.run();
             if (audit.foundVulnerability()) {
-                core.info("Found vulnarebilities");
+                core.info('Found vulnarebilities');
                 // vulnerabilities are found
                 // get GitHub information
                 const ctx = JSON.parse(core.getInput('github_context'));
@@ -3338,24 +3338,15 @@ ${advisory.overview},
                 }));
                 const issuesCreated = yield Promise.all(promises);
                 if (issuesCreated.length > 0) {
-                    if (ctx.event_name === 'pull_request') {
-                        const { data: comments } = yield client.issues.listComments({
-                            owner: github.context.repo.owner,
-                            repo: github.context.repo.repo,
-                            issue_number: ctx.event.id
-                        });
-                        const commentText = `# Found npm audit issues
+                    const prCommentText = `# Found npm audit issues
 ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
           `;
-                        const foundComment = comments.find(it => it.body.includes('# Found npm audit issues'));
-                        if (foundComment) {
-                            core.info(`Updating PR comment`);
-                            yield client.issues.updateComment(Object.assign(Object.assign({}, github.context.repo), { comment_id: foundComment.id, body: commentText }));
-                            return;
-                        }
-                        core.debug(`Posting PR comment`);
-                        yield client.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: ctx.event.id, body: commentText }));
-                        return;
+                    if (ctx.event_name === 'pull_request') {
+                        yield postStatusToPr(client, Object.assign(Object.assign({}, github.context.repo), ctx.event.id), prCommentText);
+                    }
+                    const pulls = yield client.repos.listPullRequestsAssociatedWithCommit(Object.assign(Object.assign({}, github.context.repo), { commit_sha: github.context.ref }));
+                    for (const pull of pulls) {
+                        yield postStatusToPr(client, pull, prCommentText);
                     }
                 }
             }
@@ -3366,6 +3357,20 @@ ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
     });
 }
 exports.run = run;
+function postStatusToPr(client, prData, text) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { data: comments } = yield client.issues.listComments(Object.assign({}, prData));
+        const foundComment = comments.find(it => it.body.includes('# Found npm audit issues'));
+        if (foundComment) {
+            core.info(`Updating PR comment for pr: ${prData.issue_number}`);
+            yield client.issues.updateComment(Object.assign(Object.assign({}, prData), { comment_id: foundComment.id, body: text }));
+            return;
+        }
+        core.info(`Posting PR comment for pr: ${prData.issue_number}`);
+        yield client.issues.createComment(Object.assign(Object.assign({}, prData), { body: text }));
+        return;
+    });
+}
 run();
 
 

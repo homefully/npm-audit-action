@@ -12,7 +12,7 @@ export async function run(): Promise<void> {
     await audit.run()
 
     if (audit.foundVulnerability()) {
-      core.info("Found vulnarebilities")
+      core.info('Found vulnarebilities')
       // vulnerabilities are found
 
       // get GitHub information
@@ -63,44 +63,70 @@ ${advisory.overview},
 
       const issuesCreated = await Promise.all(promises)
       if (issuesCreated.length > 0) {
-        if (ctx.event_name === 'pull_request') {
-          const {data: comments} = await client.issues.listComments({
-            owner: github.context.repo.owner,
-            repo: github.context.repo.repo,
-            issue_number: ctx.event.id
-          })
-
-          const commentText = `# Found npm audit issues
+        const prCommentText = `# Found npm audit issues
 ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
           `
-          const foundComment = comments.find(it =>
-            it.body.includes('# Found npm audit issues')
-          )
 
-          if (foundComment) {
-            core.info(`Updating PR comment`)
-            await client.issues.updateComment({
+        if (ctx.event_name === 'pull_request') {
+          await postStatusToPr(
+            client,
+            {
               ...github.context.repo,
-              comment_id: foundComment.id,
-              body: commentText
-            })
-            return
-          }
-          core.debug(`Posting PR comment`)
+              ...ctx.event.id
+            },
+            prCommentText
+          )
+        }
 
-          await client.issues.createComment({
-            ...github.context.repo,
-            issue_number: ctx.event.id,
-            body: commentText
-          })
+        const pulls = await client.repos.listPullRequestsAssociatedWithCommit({
+          ...github.context.repo,
+          commit_sha: github.context.ref
+        })
 
-          return
+        for (const pull of pulls) {
+          await postStatusToPr(client, pull, prCommentText)
         }
       }
     }
   } catch (error) {
     core.setFailed(error.message)
   }
+}
+
+async function postStatusToPr(
+  client: Octokit,
+  prData: {
+    owner: string
+    repo: string
+    issue_number: number
+  },
+  text: string
+): Promise<void> {
+  const {data: comments} = await client.issues.listComments({
+    ...prData
+  })
+
+  const foundComment = comments.find(it =>
+    it.body.includes('# Found npm audit issues')
+  )
+
+  if (foundComment) {
+    core.info(`Updating PR comment for pr: ${prData.issue_number}`)
+    await client.issues.updateComment({
+      ...prData,
+      comment_id: foundComment.id,
+      body: text
+    })
+    return
+  }
+  core.info(`Posting PR comment for pr: ${prData.issue_number}`)
+
+  await client.issues.createComment({
+    ...prData,
+    body: text
+  })
+
+  return
 }
 
 run()
