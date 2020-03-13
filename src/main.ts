@@ -32,10 +32,9 @@ export async function run(): Promise<void> {
         const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - advisory ${advisory.id}`
         const existingIssue = issues.find(it => it.title === issueName)
         const body = `
-# ${advisory.title}
 ${advisory.overview},
 
-### vulnerable versions*
+### vulnerable versions
 \`${advisory.vulnerable_versions}\`
 
 ### fixed in
@@ -44,7 +43,7 @@ ${advisory.overview},
 ### reference
 ${advisory.references}
 
-### url:
+### url
 ${advisory.url}
             `
         if (existingIssue) {
