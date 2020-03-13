@@ -32,16 +32,20 @@ export async function run(): Promise<void> {
         const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - advisory ${advisory.id}`
         const existingIssue = issues.find(it => it.title === issueName)
         const body = `
-# npm audit found
+# ${advisory.title}
 ${advisory.overview},
 
-*vulnerable versions*: ${advisory.vulnerable_versions},
+### vulnerable versions*
+\`${advisory.vulnerable_versions}\`
 
-*fixed in*: ${advisory.patched_versions},
+### fixed in
+\`${advisory.patched_versions}\`
 
-*reference*: ${advisory.references}
+### reference
+${advisory.references}
 
-*url*: ${advisory.url}
+### url:
+${advisory.url}
             `
         if (existingIssue) {
           core.info('Found issue for advisory')
@@ -71,7 +75,7 @@ ${advisory.overview},
       const issuesCreated = await Promise.all(promises)
       if (issuesCreated.length > 0) {
         const prCommentText = `# Found npm audit issues
-${issuesCreated.map(it => `[${it.title}](${it.html_url})`).join('\n')}
+${issuesCreated.map(it => `#${it.number}`).join('\n')}
           `
 
         if (ctx.event_name === 'pull_request') {
