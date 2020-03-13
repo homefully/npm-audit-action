@@ -16,7 +16,6 @@ export async function run(): Promise<void> {
       // vulnerabilities are found
 
       // get GitHub information
-      const ctx = JSON.parse(core.getInput('github_context'))
       const token: string = core.getInput('github_token', {required: true})
       const client: Octokit = new github.GitHub(token)
 
@@ -78,13 +77,20 @@ ${advisory.url}
 
       const issuesCreated = await Promise.all(promises)
 
+      core.info('updating issues with reference to prs')
       for (const issue of issuesCreated) {
+        core.info(`updating issue ${issue.number}`)
+
         for (const pr of prs) {
+          core.info(`to reference pr ${pr.number}`)
+
           const text = `affects [${pr.title}](${pr.html_url})`
+
           const {data: comments} = await client.issues.listComments({
             ...github.context.repo,
             issue_number: issue.number
           })
+
           if (comments.find(it => it.body === text) === undefined) {
             await client.issues.createComment({
               ...github.context.repo,
