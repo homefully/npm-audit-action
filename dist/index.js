@@ -3313,8 +3313,9 @@ function run() {
                 const prs = yield getPRs(client);
                 const promises = Object.values(advisories).map((advisory) => __awaiter(this, void 0, void 0, function* () {
                     core.info(`Found advisory: ${advisory.id}`);
-                    const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - advisory ${advisory.id}`;
-                    const existingIssue = issues.find(it => it.title === issueName);
+                    const issueIdentifier = `advisory ${advisory.id}`;
+                    const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - ${issueIdentifier}`;
+                    const existingIssue = issues.find(it => it.title.includes(issueIdentifier));
                     const body = `
 ${advisory.overview},
 

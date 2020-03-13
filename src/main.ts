@@ -31,8 +31,9 @@ export async function run(): Promise<void> {
 
       const promises = Object.values(advisories).map(async advisory => {
         core.info(`Found advisory: ${advisory.id}`)
-        const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - advisory ${advisory.id}`
-        const existingIssue = issues.find(it => it.title === issueName)
+        const issueIdentifier = `advisory ${advisory.id}`
+        const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - ${issueIdentifier}`
+        const existingIssue = issues.find(it => it.title.includes(issueIdentifier))
         const body = `
 ${advisory.overview},
 
