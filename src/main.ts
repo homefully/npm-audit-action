@@ -78,6 +78,7 @@ ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
           )
         }
 
+        core.info(github.context.ref)
         const {
           data: pulls
         } = await client.repos.listPullRequestsAssociatedWithCommit({

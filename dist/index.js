@@ -3344,6 +3344,7 @@ ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
                     if (ctx.event_name === 'pull_request') {
                         yield postStatusToPr(client, Object.assign(Object.assign({}, github.context.repo), ctx.event.id), prCommentText);
                     }
+                    core.info(github.context.ref);
                     const { data: pulls } = yield client.repos.listPullRequestsAssociatedWithCommit(Object.assign(Object.assign({}, github.context.repo), { commit_sha: github.context.ref }));
                     for (const pull of pulls) {
                         core.info(`checking pr ${pull.id}`);
