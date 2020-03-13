@@ -103,7 +103,9 @@ ${advisory.url}
         }
       }
 
-      const issueLinks = issuesCreated.map(it => `#[${it.title}](${it.html_url})`)
+      const issueLinks = issuesCreated.map(
+        it => `[${it.title}](${it.html_url})`
+      )
 
       if (ctx.event_name === 'pull_request') {
         await postStatusToPr(
