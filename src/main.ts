@@ -16,6 +16,8 @@ export async function run(): Promise<void> {
       // vulnerabilities are found
 
       // get GitHub information
+      // const ctx = JSON.parse(core.getInput('github_context'))
+
       const token: string = core.getInput('github_token', {required: true})
       const client: Octokit = new github.GitHub(token)
 
@@ -101,39 +103,39 @@ ${advisory.url}
         }
       }
       //
-      //       if (issuesCreated.length > 0) {
-      //         const prCommentText = `# Found npm audit issues
+      // if (issuesCreated.length > 0) {
+      //   const prCommentText = `# Found npm audit issues
       // ${issuesCreated.map(it => `#${it.number}`).join('\n')}
       //           `
       //
-      //         if (ctx.event_name === 'pull_request') {
-      //           await postStatusToPr(
-      //             client,
-      //             {
-      //               ...github.context.repo,
-      //               ...ctx.event.id
-      //             },
-      //             prCommentText
-      //           )
-      //         }
+      //   if (ctx.event_name === 'pull_request') {
+      //     await postStatusToPr(
+      //       client,
+      //       {
+      //         ...github.context.repo,
+      //         ...ctx.event.id
+      //       },
+      //       prCommentText
+      //     )
+      //   }
       //
-      //         core.info(github.context.ref)
-      //         const {
-      //           data: pulls
-      //         } = await client.repos.listPullRequestsAssociatedWithCommit({
-      //           ...github.context.repo,
-      //           commit_sha: github.context.sha
-      //         })
+      //   core.info(github.context.ref)
+      //   const {
+      //     data: pulls
+      //   } = await client.repos.listPullRequestsAssociatedWithCommit({
+      //     ...github.context.repo,
+      //     commit_sha: github.context.sha
+      //   })
       //
-      //         for (const pull of pulls) {
-      //           core.info(`checking pr ${pull.number}`)
-      //           await postStatusToPr(
-      //             client,
-      //             {...github.context.repo, issue_number: pull.number},
-      //             prCommentText
-      //           )
-      //         }
-      //       }
+      //   for (const pull of pulls) {
+      //     core.info(`checking pr ${pull.number}`)
+      //     await postStatusToPr(
+      //       client,
+      //       {...github.context.repo, issue_number: pull.number},
+      //       prCommentText
+      //     )
+      //   }
+      // }
     }
   } catch (error) {
     core.setFailed(error.message)
