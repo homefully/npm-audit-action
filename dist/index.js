@@ -3337,9 +3337,7 @@ ${advisory.overview},
                     return (yield client.issues.create(Object.assign(Object.assign({}, github.context.repo), createIssue))).data;
                 }));
                 const issuesCreated = yield Promise.all(promises);
-                core.info(JSON.stringify(issuesCreated, null, 4));
                 if (issuesCreated.length > 0) {
-                    core.info(`Found Issues`);
                     if (ctx.event_name === 'pull_request') {
                         const { data: comments } = yield client.issues.listComments({
                             owner: github.context.repo.owner,

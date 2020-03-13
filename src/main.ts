@@ -62,9 +62,7 @@ ${advisory.overview},
       })
 
       const issuesCreated = await Promise.all(promises)
-      core.info(JSON.stringify(issuesCreated, null,4))
       if (issuesCreated.length > 0) {
-        core.info(`Found Issues`)
         if (ctx.event_name === 'pull_request') {
           const {data: comments} = await client.issues.listComments({
             owner: github.context.repo.owner,
