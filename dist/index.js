@@ -3310,6 +3310,7 @@ function run() {
                 const auditOutput = JSON.parse(audit.stdout);
                 const advisories = auditOutput.advisories;
                 const { data: issues } = yield client.issues.listForRepo(Object.assign({}, github.context.repo));
+                const prs = yield getPRs(client);
                 const promises = Object.values(advisories).map((advisory) => __awaiter(this, void 0, void 0, function* () {
                     core.info(`Found advisory: ${advisory.id}`);
                     const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - advisory ${advisory.id}`;
@@ -3341,6 +3342,15 @@ ${advisory.url}
                     return (yield client.issues.create(Object.assign(Object.assign({}, github.context.repo), createIssue))).data;
                 }));
                 const issuesCreated = yield Promise.all(promises);
+                for (const issue of issuesCreated) {
+                    for (const pr of prs) {
+                        const text = `affects (${pr.title})[${pr.html_url}]`;
+                        const { data: comments } = yield client.issues.listComments(Object.assign(Object.assign({}, github.context.repo), { issue_number: issue.number }));
+                        if (comments.find(it => it.body === text) === undefined) {
+                            yield client.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: issue.number, body: text }));
+                        }
+                    }
+                }
                 if (issuesCreated.length > 0) {
                     const prCommentText = `# Found npm audit issues
 ${issuesCreated.map(it => `#${it.number}`).join('\n')}
@@ -3363,6 +3373,12 @@ ${issuesCreated.map(it => `#${it.number}`).join('\n')}
     });
 }
 exports.run = run;
+function getPRs(client) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { data: pulls } = yield client.repos.listPullRequestsAssociatedWithCommit(Object.assign(Object.assign({}, github.context.repo), { commit_sha: github.context.sha }));
+        return pulls;
+    });
+}
 function postStatusToPr(client, prData, text) {
     return __awaiter(this, void 0, void 0, function* () {
         core.info('getting comments for pr');

@@ -27,6 +27,8 @@ export async function run(): Promise<void> {
         ...github.context.repo
       })
 
+      const prs = await getPRs(client)
+
       const promises = Object.values(advisories).map(async advisory => {
         core.info(`Found advisory: ${advisory.id}`)
         const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - advisory ${advisory.id}`
@@ -72,6 +74,24 @@ ${advisory.url}
       })
 
       const issuesCreated = await Promise.all(promises)
+
+      for (const issue of issuesCreated) {
+        for (const pr of prs) {
+          const text = `affects (${pr.title})[${pr.html_url}]`
+          const {data: comments} = await client.issues.listComments({
+            ...github.context.repo,
+            issue_number: issue.number
+          })
+          if (comments.find(it => it.body === text) === undefined) {
+            await client.issues.createComment({
+              ...github.context.repo,
+              issue_number: issue.number,
+              body: text
+            })
+          }
+        }
+      }
+
       if (issuesCreated.length > 0) {
         const prCommentText = `# Found npm audit issues
 ${issuesCreated.map(it => `#${it.number}`).join('\n')}
@@ -109,6 +129,24 @@ ${issuesCreated.map(it => `#${it.number}`).join('\n')}
   } catch (error) {
     core.setFailed(error.message)
   }
+}
+
+async function getPRs(
+  client: Octokit
+): Promise<
+  {
+    number: number
+    title: string
+    html_url: string
+  }[]
+> {
+  const {data: pulls} = await client.repos.listPullRequestsAssociatedWithCommit(
+    {
+      ...github.context.repo,
+      commit_sha: github.context.sha
+    }
+  )
+  return pulls
 }
 
 async function postStatusToPr(
