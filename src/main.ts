@@ -16,7 +16,7 @@ export async function run(): Promise<void> {
       // vulnerabilities are found
 
       // get GitHub information
-      // const ctx = JSON.parse(core.getInput('github_context'))
+      const ctx = JSON.parse(core.getInput('github_context'))
 
       const token: string = core.getInput('github_token', {required: true})
       const client: Octokit = new github.GitHub(token)
@@ -31,26 +31,26 @@ export async function run(): Promise<void> {
       const prs = await getPRs(client)
 
       const promises = Object.values(advisories).map(async advisory => {
-        core.info(`Found advisory: ${advisory.id}`)
-        const issueIdentifier = `advisory ${advisory.id}`
-        const issueName = `${advisory.severity}: ${advisory.title} in ${advisory.module_name} - ${issueIdentifier}`
+        core.info(`Found advisory: ${ advisory.id }`)
+        const issueIdentifier = `advisory ${ advisory.id }`
+        const issueName = `${ advisory.severity }: ${ advisory.title } in ${ advisory.module_name } - ${ issueIdentifier }`
         const existingIssue = issues.find(it =>
           it.title.includes(issueIdentifier)
         )
         const body = `
-${advisory.overview},
+${ advisory.overview },
 
 ### vulnerable versions
-\`${advisory.vulnerable_versions}\`
+\`${ advisory.vulnerable_versions }\`
 
 ### fixed in
-\`${advisory.patched_versions}\`
+\`${ advisory.patched_versions }\`
 
 ### reference
-${advisory.references}
+${ advisory.references }
 
 ### url
-${advisory.url}
+${ advisory.url }
             `
         if (existingIssue) {
           core.info('Found issue for advisory')
@@ -81,12 +81,12 @@ ${advisory.url}
 
       core.info('updating issues with reference to prs')
       for (const issue of issuesCreated) {
-        core.info(`updating issue ${issue.number}`)
+        core.info(`updating issue ${ issue.number }`)
 
         for (const pr of prs) {
-          core.info(`to reference pr ${pr.number}`)
+          core.info(`to reference pr ${ pr.number }`)
 
-          const text = `affects [${pr.title}](${pr.html_url})`
+          const text = `affects [${ pr.title }](${ pr.html_url })`
 
           const {data: comments} = await client.issues.listComments({
             ...github.context.repo,
@@ -102,40 +102,36 @@ ${advisory.url}
           }
         }
       }
-      //
-      // if (issuesCreated.length > 0) {
-      //   const prCommentText = `# Found npm audit issues
-      // ${issuesCreated.map(it => `#${it.number}`).join('\n')}
-      //           `
-      //
-      //   if (ctx.event_name === 'pull_request') {
-      //     await postStatusToPr(
-      //       client,
-      //       {
-      //         ...github.context.repo,
-      //         ...ctx.event.id
-      //       },
-      //       prCommentText
-      //     )
-      //   }
-      //
-      //   core.info(github.context.ref)
-      //   const {
-      //     data: pulls
-      //   } = await client.repos.listPullRequestsAssociatedWithCommit({
-      //     ...github.context.repo,
-      //     commit_sha: github.context.sha
-      //   })
-      //
-      //   for (const pull of pulls) {
-      //     core.info(`checking pr ${pull.number}`)
-      //     await postStatusToPr(
-      //       client,
-      //       {...github.context.repo, issue_number: pull.number},
-      //       prCommentText
-      //     )
-      //   }
-      // }
+
+      const issueLinks = issuesCreated.map(it => `#${ it.number }`)
+
+      if (ctx.event_name === 'pull_request') {
+        await postStatusToPr(
+          client,
+          {
+            ...github.context.repo,
+            ...ctx.event.id
+          },
+          issueLinks
+        )
+      }
+
+      core.info(github.context.ref)
+      const {
+        data: pulls
+      } = await client.repos.listPullRequestsAssociatedWithCommit({
+        ...github.context.repo,
+        commit_sha: github.context.sha
+      })
+
+      for (const pull of pulls) {
+        core.info(`checking pr ${ pull.number }`)
+        await postStatusToPr(
+          client,
+          {...github.context.repo, issue_number: pull.number},
+          issueLinks
+        )
+      }
     }
   } catch (error) {
     core.setFailed(error.message)
@@ -145,13 +141,11 @@ ${advisory.url}
 
 async function getPRs(
   client: Octokit
-): Promise<
-  {
-    number: number
-    title: string
-    html_url: string
-  }[]
-> {
+): Promise<{
+  number: number
+  title: string
+  html_url: string
+}[]> {
   const {data: pulls} = await client.repos.listPullRequestsAssociatedWithCommit(
     {
       ...github.context.repo,
@@ -168,8 +162,12 @@ async function postStatusToPr(
     repo: string
     issue_number: number
   },
-  text: string
+  issues: string[]
 ): Promise<void> {
+  const prCommentText = `# Found npm audit issues
+${ issues.join('\n') }
+`
+
   core.info('getting comments for pr')
   const {data: comments} = await client.issues.listComments({
     ...prData
@@ -180,20 +178,30 @@ async function postStatusToPr(
     it.body.includes('# Found npm audit issues')
   )
 
+  if (issues.length === 0) {
+    if (foundComment) {
+      await client.issues.deleteComment({
+        ...prData,
+        comment_id: foundComment.id
+      })
+      return
+    }
+  }
+
   if (foundComment) {
-    core.info(`Updating PR comment for pr: ${prData.issue_number}`)
+    core.info(`Updating PR comment for pr: ${ prData.issue_number }`)
     await client.issues.updateComment({
       ...prData,
       comment_id: foundComment.id,
-      body: text
+      body: prCommentText
     })
     return
   }
-  core.info(`Posting PR comment for pr: ${prData.issue_number}`)
+  core.info(`Posting PR comment for pr: ${ prData.issue_number }`)
 
   await client.issues.createComment({
     ...prData,
-    body: text
+    body: prCommentText
   })
 
   return

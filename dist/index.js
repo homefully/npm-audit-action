@@ -3304,7 +3304,7 @@ function run() {
                 core.info('Found vulnarebilities');
                 // vulnerabilities are found
                 // get GitHub information
-                // const ctx = JSON.parse(core.getInput('github_context'))
+                const ctx = JSON.parse(core.getInput('github_context'));
                 const token = core.getInput('github_token', { required: true });
                 const client = new github.GitHub(token);
                 const auditOutput = JSON.parse(audit.stdout);
@@ -3355,40 +3355,16 @@ ${advisory.url}
                         }
                     }
                 }
-                //
-                // if (issuesCreated.length > 0) {
-                //   const prCommentText = `# Found npm audit issues
-                // ${issuesCreated.map(it => `#${it.number}`).join('\n')}
-                //           `
-                //
-                //   if (ctx.event_name === 'pull_request') {
-                //     await postStatusToPr(
-                //       client,
-                //       {
-                //         ...github.context.repo,
-                //         ...ctx.event.id
-                //       },
-                //       prCommentText
-                //     )
-                //   }
-                //
-                //   core.info(github.context.ref)
-                //   const {
-                //     data: pulls
-                //   } = await client.repos.listPullRequestsAssociatedWithCommit({
-                //     ...github.context.repo,
-                //     commit_sha: github.context.sha
-                //   })
-                //
-                //   for (const pull of pulls) {
-                //     core.info(`checking pr ${pull.number}`)
-                //     await postStatusToPr(
-                //       client,
-                //       {...github.context.repo, issue_number: pull.number},
-                //       prCommentText
-                //     )
-                //   }
-                // }
+                const issueLinks = issuesCreated.map(it => `#${it.number}`);
+                if (ctx.event_name === 'pull_request') {
+                    yield postStatusToPr(client, Object.assign(Object.assign({}, github.context.repo), ctx.event.id), issueLinks);
+                }
+                core.info(github.context.ref);
+                const { data: pulls } = yield client.repos.listPullRequestsAssociatedWithCommit(Object.assign(Object.assign({}, github.context.repo), { commit_sha: github.context.sha }));
+                for (const pull of pulls) {
+                    core.info(`checking pr ${pull.number}`);
+                    yield postStatusToPr(client, Object.assign(Object.assign({}, github.context.repo), { issue_number: pull.number }), issueLinks);
+                }
             }
         }
         catch (error) {
@@ -3404,19 +3380,28 @@ function getPRs(client) {
         return pulls;
     });
 }
-function postStatusToPr(client, prData, text) {
+function postStatusToPr(client, prData, issues) {
     return __awaiter(this, void 0, void 0, function* () {
+        const prCommentText = `# Found npm audit issues
+${issues.join('\n')}
+`;
         core.info('getting comments for pr');
         const { data: comments } = yield client.issues.listComments(Object.assign({}, prData));
         core.info('searching for audit comment');
         const foundComment = comments.find(it => it.body.includes('# Found npm audit issues'));
+        if (issues.length === 0) {
+            if (foundComment) {
+                yield client.issues.deleteComment(Object.assign(Object.assign({}, prData), { comment_id: foundComment.id }));
+                return;
+            }
+        }
         if (foundComment) {
             core.info(`Updating PR comment for pr: ${prData.issue_number}`);
-            yield client.issues.updateComment(Object.assign(Object.assign({}, prData), { comment_id: foundComment.id, body: text }));
+            yield client.issues.updateComment(Object.assign(Object.assign({}, prData), { comment_id: foundComment.id, body: prCommentText }));
             return;
         }
         core.info(`Posting PR comment for pr: ${prData.issue_number}`);
-        yield client.issues.createComment(Object.assign(Object.assign({}, prData), { body: text }));
+        yield client.issues.createComment(Object.assign(Object.assign({}, prData), { body: prCommentText }));
         return;
     });
 }
