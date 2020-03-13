@@ -86,6 +86,7 @@ ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
         })
 
         for (const pull of pulls) {
+          core.info(`checking pr ${pull.id}`)
           await postStatusToPr(
             client,
             {...github.context.repo, issue_number: pull.id},
@@ -108,10 +109,12 @@ async function postStatusToPr(
   },
   text: string
 ): Promise<void> {
+  core.info('getting comments for pr')
   const {data: comments} = await client.issues.listComments({
     ...prData
   })
 
+  core.info('searching for audit comment')
   const foundComment = comments.find(it =>
     it.body.includes('# Found npm audit issues')
   )

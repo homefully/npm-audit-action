@@ -3346,6 +3346,7 @@ ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
                     }
                     const { data: pulls } = yield client.repos.listPullRequestsAssociatedWithCommit(Object.assign(Object.assign({}, github.context.repo), { commit_sha: github.context.ref }));
                     for (const pull of pulls) {
+                        core.info(`checking pr ${pull.id}`);
                         yield postStatusToPr(client, Object.assign(Object.assign({}, github.context.repo), { issue_number: pull.id }), prCommentText);
                     }
                 }
@@ -3359,7 +3360,9 @@ ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
 exports.run = run;
 function postStatusToPr(client, prData, text) {
     return __awaiter(this, void 0, void 0, function* () {
+        core.info('getting comments for pr');
         const { data: comments } = yield client.issues.listComments(Object.assign({}, prData));
+        core.info('searching for audit comment');
         const foundComment = comments.find(it => it.body.includes('# Found npm audit issues'));
         if (foundComment) {
             core.info(`Updating PR comment for pr: ${prData.issue_number}`);
