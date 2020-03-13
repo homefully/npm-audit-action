@@ -83,11 +83,11 @@ ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
           data: pulls
         } = await client.repos.listPullRequestsAssociatedWithCommit({
           ...github.context.repo,
-          commit_sha: github.context.ref
+          commit_sha: github.context.sha
         })
 
         for (const pull of pulls) {
-          core.info(`checking pr ${pull.id}`)
+          core.info(`checking pr ${pull.number}`)
           await postStatusToPr(
             client,
             {...github.context.repo, issue_number: pull.number},

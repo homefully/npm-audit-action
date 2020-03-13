@@ -3345,9 +3345,9 @@ ${issuesCreated.map(it => `[${it.title}](${it.url})`).join('\n')}
                         yield postStatusToPr(client, Object.assign(Object.assign({}, github.context.repo), ctx.event.id), prCommentText);
                     }
                     core.info(github.context.ref);
-                    const { data: pulls } = yield client.repos.listPullRequestsAssociatedWithCommit(Object.assign(Object.assign({}, github.context.repo), { commit_sha: github.context.ref }));
+                    const { data: pulls } = yield client.repos.listPullRequestsAssociatedWithCommit(Object.assign(Object.assign({}, github.context.repo), { commit_sha: github.context.sha }));
                     for (const pull of pulls) {
-                        core.info(`checking pr ${pull.id}`);
+                        core.info(`checking pr ${pull.number}`);
                         yield postStatusToPr(client, Object.assign(Object.assign({}, github.context.repo), { issue_number: pull.number }), prCommentText);
                     }
                 }
